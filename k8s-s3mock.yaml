@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: s3mock-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3mock-deployment
+  namespace: s3mock-ns
+  labels:
+    app: s3mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s3mock
+  template:
+    metadata:
+      labels:
+        app: s3mock
+    spec:
+      containers:
+      - name: s3mock
+        image: adobe/s3mock:latest
+        ports:
+        - containerPort: 9090
+        - containerPort: 9191
+        env:
+        - name: COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS
+          value: "test"
+        - name: debug
+          value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3mock-service
+  namespace: s3mock-ns
+spec:
+  selector:
+    app: s3mock
+  type: NodePort
+  ports:
+  - name: http
+    port: 9090
+    targetPort: 9090
+    nodePort: 30090
+  - name: https
+    port: 9191
+    targetPort: 9191
+    nodePort: 30191
